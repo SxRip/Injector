@@ -119,7 +119,7 @@ int main(int* agrc, char** args)
 	{
 		ColoredMessage("\n DLL не найдена в текущей папке!", RED);
 		Sleep(5000);
-		return -1;
+		return -2;
 	}
 
 	DWORD procID = 0;
@@ -136,7 +136,7 @@ int main(int* agrc, char** args)
 	{
 		ColoredMessage(" Не удалось открыть процесс.", LRED);
 		Sleep(5000);
-		return -2;
+		return -3;
 	}
 
 	LPVOID Alloc = VirtualAllocEx(hProc, 0, MAX_PATH, MEM_COMMIT
@@ -146,7 +146,7 @@ int main(int* agrc, char** args)
 	{
 		ColoredMessage(" Не удалось подготовить память к инжекту", LRED);
 		Sleep(5000);
-		return -3;
+		return -4;
 	}
 
 	bool isWirten = WriteProcessMemory(hProc, Alloc, iData.second.c_str(),
@@ -156,7 +156,7 @@ int main(int* agrc, char** args)
 	{
 		ColoredMessage(" Не удалось записать данные в память", LRED);
 		Sleep(5000);
-		return -3;
+		return -5;
 	}
 
 	HANDLE hThread = CreateRemoteThread(hProc, NULL, NULL,
@@ -166,7 +166,7 @@ int main(int* agrc, char** args)
 	{
 		ColoredMessage(" Не удалось заинжектить DLL", LRED);
 		Sleep(5000);
-		return -4;
+		return -6;
 	}
 
 	ColoredMessage(" Успешно!", LGREEN);
