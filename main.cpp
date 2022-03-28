@@ -45,6 +45,7 @@ DWORD GetProcessID(const string& _Proc)
 	while (Process32Next(hSnap, &pe))
 		if (_Proc == pe.szExeFile)
 			return pe.th32ProcessID;
+	CloseHandle(hSnap);
 }
 
 pair<string, string> InjectData(const char* _pName)
