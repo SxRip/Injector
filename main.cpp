@@ -64,7 +64,7 @@ pair<string, string> InjectData(const char* _pName)
 	}
 
 	if (iDots <= 1 || iDots > 2)
-		return pair<string, string>("0", "0");
+		return make_pair("0", "0");
 
 	reverse(InjectInfo.first.begin(), InjectInfo.first.end());
 
@@ -72,7 +72,7 @@ pair<string, string> InjectData(const char* _pName)
 		InjectInfo.first.end(), '.');
 
 	if (itDot == InjectInfo.first.end())
-		return pair<string, string>("0", "0");
+		return make_pair("0", "0");
 
 	for (string::iterator it = itDot + 1; *it != '.'; ++it)
 		InjectInfo.second.push_back(*it);
@@ -93,16 +93,15 @@ bool IsFileExists(const char* _Path)
 
 int main(int* agrc, char** args)
 {
-	SetConsoleCP(RU);
-	SetConsoleOutputCP(RU);
 	SetConsoleTitle("1337 Injector");
-
 	pair<string, string> iData = InjectData(*args);
 
 	if (iData.first == "0")
 	{
-		ColoredMessage("Ошибка получении имени процесса/длл.", RED);
-		Sleep(5000);
+		ColoredMessage("Error getting process name/dll.", RED, true);
+		cout << "The injector have this name form: ProcessToInject.DllName.exe" << endl;
+		cout << "For example: "; ColoredMessage("xrEngine.hack.exe", LGREEN);
+		Sleep(10000);
 		return -1;
 	}
 
@@ -119,7 +118,7 @@ int main(int* agrc, char** args)
 	try
 	{
 		if (!FileEx)
-			throw(exception("\n DLL не найдена в текущей папке!"));
+			throw(exception("\n DLL not found in this directory!"));
 
 		char cPath[MAX_PATH]{};
 		GetCurrentDirectory(MAX_PATH, cPath);
@@ -131,40 +130,47 @@ int main(int* agrc, char** args)
 			procID = GetProcessID(iData.first);
 
 		system("cls");
-		ColoredMessage("\n Попытка инжекта...", YELLOW, true);
+		ColoredMessage("\n Trying to inject...", YELLOW, true);
 
 		hProc = OpenProcess(PROCESS_ALL_ACCESS, 0, procID);
 		system("cls");
 
 		if (!hProc)
-			throw(exception(" Не удалось открыть процесс"));
+			throw(exception(" Failed opening the process"));
 
 		LPVOID Alloc = VirtualAllocEx(hProc, 0, MAX_PATH, MEM_COMMIT
 			| MEM_RESERVE, PAGE_READWRITE);
 
 		if (!Alloc)
-			throw(exception(" Не удалось подготовить память к инжекту"));
+			throw(exception(" Failed to prepare memory for injection"));
 
 		bool isWirten = WriteProcessMemory(hProc, Alloc, iData.second.c_str(),
 			iData.second.size(), 0);
 
 		if (!isWirten)
-			throw(exception(" Не удалось записать данные в память"));
+			throw(exception(" Filed to write data to memory"));
 
 		hThread = CreateRemoteThread(hProc, NULL, NULL,
 			(LPTHREAD_START_ROUTINE)LoadLibraryA, Alloc, 0, 0);
 
 		if (!hThread)
-			throw(exception(" Не удалось заинжектить DLL"));
+			throw(exception(" Failed to inject DLL"));
 	}
 	catch (const std::exception& ex)
 	{
 		ColoredMessage(ex.what(), RED);
+
+		if (hProc)
+			CloseHandle(hProc);
+
+		if (hThread)
+			CloseHandle(hThread);
+
 		Sleep(5000);
 		return -1;
 	}
 
-	ColoredMessage(" Успешно!", LGREEN);
+	ColoredMessage(" Successfully!", LGREEN);
 	Sleep(2500);
 
 	if (hProc)
