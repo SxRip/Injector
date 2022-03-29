@@ -3,7 +3,7 @@
 #include <TlHelp32.h>
 using namespace std;
 
-#define RU 1251
+
 enum MsgColor
 {
 	RED = FOREGROUND_RED,
