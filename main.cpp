@@ -1,4 +1,4 @@
-﻿#include <iostream>
+#include <iostream>
 #include <Windows.h>
 #include <TlHelp32.h>
 using namespace std;
@@ -45,6 +45,7 @@ DWORD GetProcessID(const string& _Proc)
 	while (Process32Next(hSnap, &pe))
 		if (_Proc == pe.szExeFile)
 			return pe.th32ProcessID;
+
 	CloseHandle(hSnap);
 	return 0;
 }
@@ -62,7 +63,7 @@ pair<string, string> InjectData(const char* _pName)
 			++iDots;
 	}
 
-	if (iDots != 2)
+	if (iDots <= 1 || iDots > 2)
 		return pair<string, string>("0", "0");
 
 	reverse(InjectInfo.first.begin(), InjectInfo.first.end());
@@ -94,6 +95,8 @@ int main(int* agrc, char** args)
 {
 	SetConsoleCP(RU);
 	SetConsoleOutputCP(RU);
+	SetConsoleTitle("1337 Injector");
+
 	pair<string, string> iData = InjectData(*args);
 
 	if (iData.first == "0")
@@ -110,70 +113,65 @@ int main(int* agrc, char** args)
 	cout << " DLL to inject "; ColoredMessage(iData.second.c_str(), FileEx ? LGREEN : LRED, true);
 	cout << "\n\n "; ColoredMessage("Discord", LBLUE); cout << ": __neverland#0001" << endl;
 
-	char cPath[MAX_PATH]{};
-	GetCurrentDirectory(MAX_PATH, cPath);
-	strcat_s(cPath, "\\");
-	iData.second = cPath + iData.second;
+	HANDLE hProc = nullptr;
+	HANDLE hThread = nullptr;
 
-	if (!FileEx)
+	try
 	{
-		ColoredMessage("\n DLL не найдена в текущей папке!", RED);
-		Sleep(5000);
-		return -2;
+		if (!FileEx)
+			throw(exception("\n DLL не найдена в текущей папке!"));
+
+		char cPath[MAX_PATH]{};
+		GetCurrentDirectory(MAX_PATH, cPath);
+		strcat_s(cPath, "\\");
+		iData.second = cPath + iData.second;
+
+		DWORD procID = 0;
+		while (!procID)
+			procID = GetProcessID(iData.first);
+
+		system("cls");
+		ColoredMessage("\n Попытка инжекта...", YELLOW, true);
+
+		hProc = OpenProcess(PROCESS_ALL_ACCESS, 0, procID);
+		system("cls");
+
+		if (!hProc)
+			throw(exception(" Не удалось открыть процесс"));
+
+		LPVOID Alloc = VirtualAllocEx(hProc, 0, MAX_PATH, MEM_COMMIT
+			| MEM_RESERVE, PAGE_READWRITE);
+
+		if (!Alloc)
+			throw(exception(" Не удалось подготовить память к инжекту"));
+
+		bool isWirten = WriteProcessMemory(hProc, Alloc, iData.second.c_str(),
+			iData.second.size(), 0);
+
+		if (!isWirten)
+			throw(exception(" Не удалось записать данные в память"));
+
+		hThread = CreateRemoteThread(hProc, NULL, NULL,
+			(LPTHREAD_START_ROUTINE)LoadLibraryA, Alloc, 0, 0);
+
+		if (!hThread)
+			throw(exception(" Не удалось заинжектить DLL"));
 	}
-
-	DWORD procID = 0;
-	while (!procID)
-		procID = GetProcessID(iData.first);
-
-	system("cls");
-	ColoredMessage("\n Попытка инжекта...", YELLOW, true);
-
-	HANDLE hProc = OpenProcess(PROCESS_ALL_ACCESS, 0, procID);
-	system("cls");
-
-	if (!hProc)
+	catch (const std::exception& ex)
 	{
-		ColoredMessage(" Не удалось открыть процесс.", LRED);
+		ColoredMessage(ex.what(), RED);
 		Sleep(5000);
-		return -3;
-	}
-
-	LPVOID Alloc = VirtualAllocEx(hProc, 0, MAX_PATH, MEM_COMMIT
-		| MEM_RESERVE, PAGE_READWRITE);
-
-	if (!Alloc)
-	{
-		ColoredMessage(" Не удалось подготовить память к инжекту", LRED);
-		Sleep(5000);
-		return -4;
-	}
-
-	bool isWirten = WriteProcessMemory(hProc, Alloc, iData.second.c_str(),
-		iData.second.size(), 0);
-
-	if (!isWirten)
-	{
-		ColoredMessage(" Не удалось записать данные в память", LRED);
-		Sleep(5000);
-		return -5;
-	}
-
-	HANDLE hThread = CreateRemoteThread(hProc, NULL, NULL,
-		(LPTHREAD_START_ROUTINE)LoadLibraryA, Alloc, 0, 0);
-
-	if (!hThread)
-	{
-		ColoredMessage(" Не удалось заинжектить DLL", LRED);
-		Sleep(5000);
-		return -6;
+		return -1;
 	}
 
 	ColoredMessage(" Успешно!", LGREEN);
 	Sleep(2500);
 
-	CloseHandle(hProc);
-	CloseHandle(hThread);
+	if (hProc)
+		CloseHandle(hProc);
+
+	if (hThread)
+		CloseHandle(hThread);
 
 	return 0;
 }
