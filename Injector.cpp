@@ -133,7 +133,6 @@ int main(int* agrc, char** args)
 		ColoredMessage("\n Trying to inject...", YELLOW, true);
 
 		hProc = OpenProcess(PROCESS_ALL_ACCESS, 0, procID);
-		system("cls");
 
 		if (!hProc)
 			throw(exception(" Failed opening the process"));
@@ -158,6 +157,7 @@ int main(int* agrc, char** args)
 	}
 	catch (const std::exception& ex)
 	{
+		system("cls");
 		ColoredMessage(ex.what(), RED);
 
 		if (hProc)
@@ -169,7 +169,7 @@ int main(int* agrc, char** args)
 		Sleep(5000);
 		return -1;
 	}
-
+	system("cls");
 	ColoredMessage(" Successfully!", LGREEN);
 	Sleep(2500);
 
