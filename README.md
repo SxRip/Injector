@@ -7,8 +7,7 @@ For compilation:
   * Configuration properties -> Additionally
   * Character set -> Use multibyte encoding
 
-⚠ After the compilation you can see that injector does not works.
-It happened because you running it without administrator permissions.
+⚠ After compilation, the injector may not work. This happened because you were running it without admin rights.
 
 You can fix that:
 * Go to Project Properties ->
