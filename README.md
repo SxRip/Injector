@@ -2,6 +2,8 @@
 
 ⚠ The name of the injector must be in this form: **ProcessToInject**.**dllName**.exe
 
+⚠ The DLL for inject should be in that folder, where injector exist.
+
 For compilation: 
 * Go to Project Properties ->
   * Configuration properties -> Additionally
