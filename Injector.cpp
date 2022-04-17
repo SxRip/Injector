@@ -63,7 +63,7 @@ pair<string, string> InjectData(const char* _pName)
 			++iDots;
 	}
 
-	if (iDots <= 1 || iDots > 2)
+	if (iDots != 2)
 		return make_pair("0", "0");
 
 	reverse(InjectInfo.first.begin(), InjectInfo.first.end());
